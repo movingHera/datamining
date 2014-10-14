@@ -1,13 +1,19 @@
 #-*- encoding: UTF-8 -*-
 #---------------------------------import------------------------------------
 #---------------------------------------------------------------------------
-min_support = 10
+min_support = 14
 min_confidence = 20
 item_num = 11
-num = [i for i in range(item_num)]
-support = []
+num = [i for i in range(item_num)] # 记录item
+support = [] # 计算support
 location = [[i] for i in range(item_num)]
-def sut(location):
+item_name = [] # 项目名
+with open('basket.txt', 'r') as F:
+    for index,line in enumerate(F.readlines()):
+        if index == 0:
+            item_name = [i for i in line.split(' ') if i][2:]
+print item_name
+def sut(location): # [[1,2,3],[2,3,4],[1,3,5]...]
     "支持度"
     with open('basket.txt', 'r') as F:
         support = [0] * len(location)
@@ -45,7 +51,7 @@ def select(a,b,c):
 
 s = 2
 last_support = []
-while num:
+while num and location:
     print '-'*80
     print 'location' , location
     support = sut(location)
@@ -57,6 +63,7 @@ while num:
     location_delete = [i for i,j in zip(location,support) if j != 0]
     print 'location_deleted' , location_delete
     if not location_delete:
+        print '-'*80
         break
     support = [i for i in support if i != 0]
     print 'support' , support
@@ -69,16 +76,16 @@ while num:
     print 'num' , num
     # 重新选择location
     location = select(location_delete, num, s)
-    if not location:
-        print '-'*80
-        break
     s += 1
     print '-'*80
+
 def confidenc_sup():
     del_num = [num[:index] + num[index+1:] for index,i in enumerate(range(len(num)))]
     xy = sut(del_num)
-    print [last_support[0]/float(i) for i in xy]
-    print float(last_support[0])/1000
+    support_l =  float(last_support[0])/1000
+    for index,i in enumerate(del_num):
+        s = [j for index_item,j in enumerate(item_name) if index_item in i]
+        print ','.join(s) , '->>' , item_name[num[index]] , ' min_support: ' , support_l , ' min_confidence:' , last_support[0]/float(xy[index])
 
 confidenc_sup()
 
