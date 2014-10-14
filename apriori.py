@@ -1,36 +1,38 @@
 #-*- encoding: UTF-8 -*-
 #---------------------------------import------------------------------------
 #---------------------------------------------------------------------------
-min_support = 20
+min_support = 14
 min_confidence = 20
-num = [1] * 11
+item_num = 11
+num = [i for i in range(item_num)]
 support = []
-with open('basket.txt', 'r') as F:
-    for index,line in enumerate(F.readlines()):
-        if index == 0:
-            things = [i.strip() for i in line.split(' ')[2:] if i]
-            things = [1] * len(things)
-            support = [0] * len(things)
-            continue
-        things_line = [i.strip() for i in line.split(' ') if i][2:]
-        for index_line,i in enumerate(things_line):
-            if i == 'T':
-                support[index_line] += 1
-    print support
+location = [[i] for i in range(item_num)]
+def sut(location):
+    with open('basket.txt', 'r') as F:
+        support = [0] * len(location)
+        for index,line in enumerate(F.readlines()):
+            if index == 0:
+                continue
+            # 提取每行信息
+            item_line = [i.strip() for i in line.split(' ') if i][2:]
+            for index_num,i in enumerate(location):
+                flag = 0
+                for j in i:
+                    if item_line[j] != 'T':
+                        flag = 1
+                        break
+                if not flag:
+                    support[index_num] += 1
+        return support
 
-# 第一次筛选
-for index_next,i in enumerate(support):
-    if i < index * min_support / 100:
-        support[index_next] = 0
-        things[index_next]  = 0
+# # 第一次筛选
+# for index,i in enumerate(support):
+#     if i < 1000 * min_support / 100:
+#         support[index] = 0
+#         num = [i for i in num if i not in location[index]]
+# # 删除位置
+# location_delete = [i for i,j in zip(location,support) if j != 0]
 
-print support
-print things
-
-tmp = [index for index,i in enumerate(things) if i == 1]
-print tmp
-tmp1 = [[i] for i in tmp]
-print tmp1
 def select(a,b,c):
     "返回位置"
     stack = []
@@ -41,32 +43,33 @@ def select(a,b,c):
                     stack.append(i)
             else:
                 stack.append([j] + i)
-    return stack
+    # 多重列表去重
+    import itertools
+    s = [sorted(i) for i in stack]
+    s.sort()
+    tmp = list(s for s,_ in itertools.groupby(s))
+    return tmp
 
-num = select(tmp1,tmp,2)
-tmp = [0] * len(select(tmp1,tmp,2))
-# 第二次筛选
-with open('basket.txt', 'r') as F:
-    for index,line in enumerate(F.readlines()):
-        if index ==0:
-            continue
-        line = [i.strip() for i in line.split(' ') if i][2:]
-        for index_num,i in enumerate(num):
-            for j in range(len(i)):
-                if line[i[j]] != 'T':
-                    break
-            if j == len(i) - 1:
-                tmp[index_num] += 1
+s = 2
+while num:
+    support = sut(location)
+    print 'support' , support
+    # 筛选
+    for index,i in enumerate(support):
+        if i < 1000 * min_support / 100:
+            support[index] = 0
+    # 删除没用的位置
+    location_delete = [i for i,j in zip(location,support) if j != 0]
+    print 'location_deleted' , location_delete
+    num = []
+    for i in location_delete:
+        num += i
+    num = list(set(sorted(num)))
+    print 'num' , num
+    # 重新选择location
+    location = select(location_delete, num, s)
+    print 'location' , location
+    s += 1
 
-print tmp
-
-# for i in data:
-#     with open('basket.txt', 'r') as F:
-#         for line in F.readlines():
-
-
-
-
-
-
+# location = select(location_delete, num, 2)
 ############################################################################
