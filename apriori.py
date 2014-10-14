@@ -52,6 +52,7 @@ def select(a,b,c):
 
 s = 2
 while num:
+    print 'location' , location
     support = sut(location)
     print 'support' , support
     # 筛选
@@ -68,7 +69,6 @@ while num:
     print 'num' , num
     # 重新选择location
     location = select(location_delete, num, s)
-    print 'location' , location
     s += 1
 
 # location = select(location_delete, num, 2)
