@@ -1,7 +1,7 @@
 #-*- encoding: UTF-8 -*-
 #---------------------------------import------------------------------------
 #---------------------------------------------------------------------------
-min_support = 1
+min_support = 5
 min_confidence = 20
 item_num = 11
 num = [i for i in range(item_num)] # 记录item
@@ -90,23 +90,28 @@ while num and location:
     num = []
     for i in location_delete:
         num += i
-    num = list(set(sorted(num)))
+    num = list(sorted(set(num)))
 
     pre_num = num
     pre_location = location_delete
     pre_support = support_delete
 
-
 def confidenc_sup():
-    del_num = [pre_num[:index] + pre_num[index+1:] for index,i in enumerate(range(len(pre_num)))]
-    xy = sut(del_num)
-    print del_num
-    print xy
-    for index,i in enumerate(del_num):
-        support =  float(pre_support[index])/1000
-        s = [j for index_item,j in enumerate(item_name) if index_item in i]
-        if xy[index]:
-            print ','.join(s) , '->>' , item_name[pre_num[index]] , ' min_support: ' , support , ' min_confidence:' , pre_support[index]/float(xy[index])
+    if sum(pre_support) == 0:
+        print 'No min_support'
+    else:
+        del_num = [pre_num[:index] + pre_num[index+1:] for index,i in enumerate(range(len(pre_num)))]
+        xy = sut(del_num)
+        print del_num
+        print pre_support
+        for index,i in enumerate(del_num):
+            index_support = 0
+            if len(pre_support) != 1:
+                index_support = index
+            support =  float(pre_support[index_support])/1000
+            s = [j for index_item,j in enumerate(item_name) if index_item in i]
+            if xy[index]:
+                print ','.join(s) , '->>' , item_name[pre_num[index]] , ' min_support: ' , support , ' min_confidence:' , float(xy[index])
 
 confidenc_sup()
 
