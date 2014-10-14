@@ -1,13 +1,14 @@
 #-*- encoding: UTF-8 -*-
 #---------------------------------import------------------------------------
 #---------------------------------------------------------------------------
-min_support = 14
+min_support = 10
 min_confidence = 20
 item_num = 11
 num = [i for i in range(item_num)]
 support = []
 location = [[i] for i in range(item_num)]
 def sut(location):
+    "支持度"
     with open('basket.txt', 'r') as F:
         support = [0] * len(location)
         for index,line in enumerate(F.readlines()):
@@ -24,14 +25,6 @@ def sut(location):
                 if not flag:
                     support[index_num] += 1
         return support
-
-# # 第一次筛选
-# for index,i in enumerate(support):
-#     if i < 1000 * min_support / 100:
-#         support[index] = 0
-#         num = [i for i in num if i not in location[index]]
-# # 删除位置
-# location_delete = [i for i,j in zip(location,support) if j != 0]
 
 def select(a,b,c):
     "返回位置"
@@ -51,10 +44,11 @@ def select(a,b,c):
     return tmp
 
 s = 2
+last_support = []
 while num:
+    print '-'*80
     print 'location' , location
     support = sut(location)
-    print 'support' , support
     # 筛选
     for index,i in enumerate(support):
         if i < 1000 * min_support / 100:
@@ -62,6 +56,12 @@ while num:
     # 删除没用的位置
     location_delete = [i for i,j in zip(location,support) if j != 0]
     print 'location_deleted' , location_delete
+    if not location_delete:
+        break
+    support = [i for i in support if i != 0]
+    print 'support' , support
+    last_support = support
+
     num = []
     for i in location_delete:
         num += i
@@ -69,7 +69,18 @@ while num:
     print 'num' , num
     # 重新选择location
     location = select(location_delete, num, s)
+    if not location:
+        print '-'*80
+        break
     s += 1
+    print '-'*80
+def confidenc_sup():
+    del_num = [num[:index] + num[index+1:] for index,i in enumerate(range(len(num)))]
+    xy = sut(del_num)
+    print [last_support[0]/float(i) for i in xy]
+    print float(last_support[0])/1000
+
+confidenc_sup()
 
 # location = select(location_delete, num, 2)
 ############################################################################
