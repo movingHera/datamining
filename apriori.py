@@ -1,7 +1,7 @@
 #-*- encoding: UTF-8 -*-
 #---------------------------------import------------------------------------
 #---------------------------------------------------------------------------
-min_support = 14
+min_support = 1
 min_confidence = 20
 item_num = 11
 num = [i for i in range(item_num)] # 记录item
@@ -48,44 +48,65 @@ def select(a,b,c):
     s.sort()
     tmp = list(s for s,_ in itertools.groupby(s))
     return tmp
-
-s = 2
-last_support = []
-while num and location:
-    print '-'*80
-    print 'location' , location
-    support = sut(location)
+def del_location(support, location):
+    "清除不满足条件的候选集"
     # 筛选
     for index,i in enumerate(support):
         if i < 1000 * min_support / 100:
             support[index] = 0
     # 删除没用的位置
     location_delete = [i for i,j in zip(location,support) if j != 0]
-    print 'location_deleted' , location_delete
-    if not location_delete:
-        print '-'*80
-        break
     support = [i for i in support if i != 0]
-    print 'support' , support
-    last_support = support
+    return support,location_delete
 
+s = 2
+last_support = []
+pre_support = sut(location)
+pre_location = location
+pre_support_delete,pre_location_delete = del_location(pre_support,pre_location)
+num = []
+for i in pre_location:
+    num += i
+num = list(sorted(set(num)))
+pre_num = num
+# print pre_num
+# print pre_location
+# print pre_support
+while num and location:
+    print '-'*80
+    print 'The' ,s - 1,'loop'
+    print 'location' , pre_location
+    print 'support' , pre_support
+    print 'num' , pre_num
+    print '-'*80
+
+    # 生成下一级候选集
+    location = select(pre_location, num, s)
+    s += 1
+    support = sut(location)
+    support_delete,location_delete = del_location(support,location)
+    if not location_delete:
+        break
     num = []
     for i in location_delete:
         num += i
     num = list(set(sorted(num)))
-    print 'num' , num
-    # 重新选择location
-    location = select(location_delete, num, s)
-    s += 1
-    print '-'*80
+
+    pre_num = num
+    pre_location = location_delete
+    pre_support = support_delete
+
 
 def confidenc_sup():
-    del_num = [num[:index] + num[index+1:] for index,i in enumerate(range(len(num)))]
+    del_num = [pre_num[:index] + pre_num[index+1:] for index,i in enumerate(range(len(pre_num)))]
     xy = sut(del_num)
-    support_l =  float(last_support[0])/1000
+    print del_num
+    print xy
     for index,i in enumerate(del_num):
+        support =  float(pre_support[index])/1000
         s = [j for index_item,j in enumerate(item_name) if index_item in i]
-        print ','.join(s) , '->>' , item_name[num[index]] , ' min_support: ' , support_l , ' min_confidence:' , last_support[0]/float(xy[index])
+        if xy[index]:
+            print ','.join(s) , '->>' , item_name[pre_num[index]] , ' min_support: ' , support , ' min_confidence:' , pre_support[index]/float(xy[index])
 
 confidenc_sup()
 
