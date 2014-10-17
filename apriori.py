@@ -1,7 +1,7 @@
 #-*- encoding: UTF-8 -*-
 #---------------------------------import------------------------------------
 #---------------------------------------------------------------------------
-min_support = 5
+min_support = 15
 min_confidence = 20
 item_num = 11
 num = [i for i in range(item_num)] # 记录item
@@ -12,9 +12,10 @@ with open('basket.txt', 'r') as F:
     for index,line in enumerate(F.readlines()):
         if index == 0:
             item_name = [i for i in line.split(' ') if i][2:]
+            break
 print item_name
 def sut(location): # [[1,2,3],[2,3,4],[1,3,5]...]
-    "支持度"
+    "计算支持度,每次计算迭代一次数据库"
     with open('basket.txt', 'r') as F:
         support = [0] * len(location)
         for index,line in enumerate(F.readlines()):
@@ -48,30 +49,33 @@ def select(a,b,c):
     s.sort()
     tmp = list(s for s,_ in itertools.groupby(s))
     return tmp
-def del_location(support, location):
+
+def del_location(support, location,pre_location):
     "清除不满足条件的候选集"
-    # 筛选
+    # 小于最小支持度的剔除
     for index,i in enumerate(support):
         if i < 1000 * min_support / 100:
             support[index] = 0
+    # apriori第二条规则,剔除
+    for index,j in enumerate(location):
+        sub_location = [j[:index_loc] + j[index_loc+1:]for index_loc,x in enumerate(range(len(j)))]
+        flag = 0
+        for k in sub_location:
+            if k not in pre_location:
+                flag = 1
+                break
+        if flag:
+            support[index] = 0
     # 删除没用的位置
-    location_delete = [i for i,j in zip(location,support) if j != 0]
+    location = [i for i,j in zip(location,support) if j != 0]
     support = [i for i in support if i != 0]
-    return support,location_delete
+
+    return support,location
 
 s = 2
-last_support = []
 pre_support = sut(location)
 pre_location = location
-pre_support_delete,pre_location_delete = del_location(pre_support,pre_location)
-num = []
-for i in pre_location:
-    num += i
-num = list(sorted(set(num)))
-pre_num = num
-# print pre_num
-# print pre_location
-# print pre_support
+pre_num = list(sorted(set([j for i in pre_location for j in i])))
 while num and location:
     print '-'*80
     print 'The' ,s - 1,'loop'
@@ -84,7 +88,7 @@ while num and location:
     location = select(pre_location, num, s)
     s += 1
     support = sut(location)
-    support_delete,location_delete = del_location(support,location)
+    support_delete,location_delete = del_location(support,location,pre_location)
     if not location_delete:
         break
     num = []
@@ -100,20 +104,24 @@ def confidenc_sup():
     if sum(pre_support) == 0:
         print 'No min_support'
     else:
-        del_num = [pre_num[:index] + pre_num[index+1:] for index,i in enumerate(range(len(pre_num)))]
-        xy = sut(del_num)
-        print del_num
-        print pre_support
-        for index,i in enumerate(del_num):
-            index_support = 0
-            if len(pre_support) != 1:
-                index_support = index
-            support =  float(pre_support[index_support])/1000
-            s = [j for index_item,j in enumerate(item_name) if index_item in i]
-            if xy[index]:
-                print ','.join(s) , '->>' , item_name[pre_num[index]] , ' min_support: ' , support , ' min_confidence:' , float(xy[index])
+        for index_location,each_location in enumerate(pre_location):
+            del_num = [each_location[:index] + each_location[index+1:] for index,i in enumerate(range(len(each_location)))]
+            xy = sut(del_num)
+            print del_num
+            print pre_support[index_location]
+            print xy
+            if not del_num[0]:
+                print 'min_support error'
+                break
+            for index,i in enumerate(del_num):
+                index_support = 0
+                if len(pre_support) != 1:
+                    index_support = index
+                support =  float(pre_support[index_location])/1000
+                s = [j for index_item,j in enumerate(item_name) if index_item in i]
+                if xy[index]:
+                    print ','.join(s) , '->>' , item_name[pre_num[index]] , ' min_support: ' , support , ' min_confidence:' , pre_support[index_location]/float(xy[index])
 
 confidenc_sup()
 
-# location = select(location_delete, num, 2)
 ############################################################################
