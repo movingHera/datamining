@@ -1,7 +1,7 @@
 #-*- encoding: UTF-8 -*-
 #---------------------------------import------------------------------------
 #---------------------------------------------------------------------------
-min_support = 15
+min_support = 17
 min_confidence = 20
 item_num = 11 # 项目数
 num = [i for i in range(item_num)] # 记录item
@@ -9,7 +9,7 @@ support = [] # 计算support
 location = [[i] for i in range(item_num)]
 item_name = [] # 项目名
 def deal_line(line):
-    "根据提取出需要的项"
+    "提取出需要的项"
     return [i.strip() for i in line.split(' ') if i][2:]
 
 def find_item_name(filename):
@@ -20,9 +20,6 @@ def find_item_name(filename):
                 item_name = deal_line(line)
                 break
     return item_name
-
-item_name = find_item_name('basket.txt')
-print item_name
 
 def sut(location):
     """
@@ -83,31 +80,35 @@ def del_location(support, location,pre_location):
 
     return support,location
 
-s = 2
-pre_support = sut(location)
-pre_location = location
-pre_num = list(sorted(set([j for i in pre_location for j in i])))
-while num and location:
-    print '-'*80
-    print 'The' ,s - 1,'loop'
-    print 'location' , pre_location
-    print 'support' , pre_support
-    print 'num' , pre_num
-    print '-'*80
 
-    # 生成下一级候选集
-    location = select(pre_location, num, s)
-    support = sut(location)
-    support_delete,location_delete = del_location(support,location,pre_location)
-    s += 1
-    if not location_delete:
-        break
+def loop(location):
+    s = 2
+    pre_support = sut(location)
+    pre_location = location
+    pre_num = list(sorted(set([j for i in pre_location for j in i])))
+    while num and location:
+        print '-'*80
+        print 'The' ,s - 1,'loop'
+        print 'location' , pre_location
+        print 'support' , pre_support
+        print 'num' , pre_num
+        print '-'*80
 
-    pre_num = list(sorted(set([j for i in location_delete for j in i])))
-    pre_location = location_delete
-    pre_support = support_delete
+        # 生成下一级候选集
+        location = select(pre_location, num, s)
+        support = sut(location)
+        support_delete,location_delete = del_location(support,location,pre_location)
+        s += 1
+        if not location_delete:
+            break
 
-def confidenc_sup():
+        pre_num = list(sorted(set([j for i in location_delete for j in i])))
+        pre_location = location_delete
+        pre_support = support_delete
+    return pre_num,pre_support,pre_location
+
+def confidenc_sup(pre_num, pre_support, pre_location, item_name):
+    "计算confidence"
     if sum(pre_support) == 0:
         print 'min_support error'
     else:
@@ -129,6 +130,12 @@ def confidenc_sup():
                 if xy[index]:
                     print ','.join(s) , '->>' , item_name[pre_num[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , pre_support[index_location]/float(xy[index])
 
-confidenc_sup()
+def main():
+    item_name = find_item_name('basket.txt')
+    pre_num,pre_support,pre_location = loop(location)
+    confidenc_sup(pre_num, pre_support, pre_location, item_name)
+
+if __name__ == '__main__':
+    main()
 
 ############################################################################
