@@ -4,17 +4,18 @@
 class Apriori(object):
 
     def __init__(self, filename):
-        self.min_support = 15
+        self.min_support = 14
         self.min_confidence = 20
         self.item_num = 11 # 项目数
 
         self.location = [[i] for i in range(self.item_num)]
         self.support = self.sut(self.location)
         self.num = list(sorted(set([j for i in self.location for j in i])))# 记录item
+        self.first_support = self.support[:] # 求取confidence
 
-        self.pre_support = self.support
-        self.pre_location = self.location
-        self.pre_num = self.num
+        self.pre_support = [] # 保存前一个support,location,num
+        self.pre_location = []
+        self.pre_num = []
 
         self.item_name = [] # 项目名
         self.find_item_name(filename)
@@ -55,7 +56,11 @@ class Apriori(object):
     def select(self, c):
         "返回位置"
         stack = []
-        for i in self.pre_location:
+        # if self.pre_location:
+        #     pre = self.pre_location
+        # else:
+        #     pre = self.location
+        for i in self.location:
             for j in self.num:
                 if j in i:
                     if len(i) == c:
@@ -79,7 +84,7 @@ class Apriori(object):
             sub_location = [j[:index_loc] + j[index_loc+1:]for index_loc in range(len(j))]
             flag = 0
             for k in sub_location:
-                if k not in self.pre_location:
+                if k not in self.location:
                     flag = 1
                     break
             if flag:
@@ -90,6 +95,7 @@ class Apriori(object):
         return support, location
 
     def loop(self):
+        "s级频繁项级的迭代"
         s = 2
         while True:
             print '-'*80
@@ -103,47 +109,48 @@ class Apriori(object):
             location = self.select(s)
             support = self.sut(location)
             support, location = self.del_location(support, location)
+            num = list(sorted(set([j for i in location for j in i])))
             s += 1
-            if  location and support:
-                self.pre_num = list(sorted(set([j for i in self.location for j in i])))
+            if  location and support and num:
+                self.pre_num = self.num
                 self.pre_location = self.location
                 self.pre_support = self.support
 
-                self.num = list(sorted(set([j for i in location for j in i])))
+                self.num = num
                 self.location = location
                 self.support = support
             else:
                 break
 
-    def confidenc_sup(self):
+    def confidence_sup(self):
         "计算confidence"
-        if sum(self.support) == 0:
+        if sum(self.pre_support) == 0:
             print 'first min_support error'
         else:
             for index_location,each_location in enumerate(self.location):
                 del_num = [each_location[:index] + each_location[index+1:] for index in range(len(each_location))]
-                xy = self.sut(del_num)
                 print del_num
+                del_num = [i for i in del_num if i in self.pre_location] # 删除不存在上一级频繁项级子集
+                del_support = [self.pre_support[self.pre_location.index(i)] for i in del_num if i in self.pre_location]
                 print self.support[index_location]
-                print xy
+                print del_support
                 if not del_num[0]:
                     print 'min_support error'
                     break
                 for index,i in enumerate(del_num):
                     index_support = 0
-                    if len(self.pre_support) != 1:
+                    if len(self.support) != 1:
                         index_support = index
-                    support =  float(self.pre_support[index_location])/10
+                    support =  float(self.support[index_location])/10
                     s = [j for index_item,j in enumerate(self.item_name) if index_item in i]
-                    if xy[index]:
-                        print ','.join(s) , '->>' , self.item_name[self.pre_num[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , self.pre_support[index_location]/float(xy[index])
+                    if del_support[index]:
+                        print ','.join(s) , '->>' , self.item_name[self.num[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , float(self.support[index_location])/del_support[index]
 
 def main():
     c = Apriori('basket.txt')
     c.loop()
-    c.confidenc_sup()
+    c.confidence_sup()
 
 if __name__ == '__main__':
     main()
-
 ############################################################################
