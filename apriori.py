@@ -4,7 +4,7 @@
 class Apriori(object):
 
     def __init__(self, filename):
-        self.min_support = 14
+        self.min_support = 10
         self.min_confidence = 20
         self.item_num = 11 # 项目数
 
@@ -125,26 +125,26 @@ class Apriori(object):
     def confidence_sup(self):
         "计算confidence"
         if sum(self.pre_support) == 0:
-            print 'first min_support error'
+            print 'min_support error' # 第一次迭代即失败
         else:
             for index_location,each_location in enumerate(self.location):
-                del_num = [each_location[:index] + each_location[index+1:] for index in range(len(each_location))]
-                print del_num
+                del_num = [each_location[:index] + each_location[index+1:] for index in range(len(each_location))] # 生成上一级频繁项级
                 del_num = [i for i in del_num if i in self.pre_location] # 删除不存在上一级频繁项级子集
-                del_support = [self.pre_support[self.pre_location.index(i)] for i in del_num if i in self.pre_location]
+                del_support = [self.pre_support[self.pre_location.index(i)] for i in del_num if i in self.pre_location] # 从上一级支持度查找
+                print del_num
                 print self.support[index_location]
                 print del_support
-                if not del_num[0]:
-                    print 'min_support error'
-                    break
-                for index,i in enumerate(del_num):
+                # if not del_num[0]:
+                #     print 'min_support error'
+                #     break
+                for index,i in enumerate(del_num): # 计算每个关联规则支持度和自信度
                     index_support = 0
                     if len(self.support) != 1:
                         index_support = index
-                    support =  float(self.support[index_location])/10
+                    support =  float(self.support[index_location])/10 # 支持度
                     s = [j for index_item,j in enumerate(self.item_name) if index_item in i]
                     if del_support[index]:
-                        print ','.join(s) , '->>' , self.item_name[self.num[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , float(self.support[index_location])/del_support[index]
+                        print ','.join(s) , '->>' , self.item_name[each_location[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , float(self.support[index_location])/del_support[index]
 
 def main():
     c = Apriori('basket.txt')
