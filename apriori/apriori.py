@@ -6,8 +6,7 @@ class Apriori(object):
     def __init__(self, filename, min_support, item_start, item_end):
         self.filename = filename
         self.min_support = min_support # 最小支持度
-        self.min_confidence = 20
-        # self.item_num = item_num # 项目数
+        self.min_confidence = 50
         self.line_num = 0 # item的行数
         self.item_start = item_start #  取哪行的item
         self.item_end = item_end
@@ -15,7 +14,6 @@ class Apriori(object):
         self.location = [[i] for i in range(self.item_end - self.item_start + 1)]
         self.support = self.sut(self.location)
         self.num = list(sorted(set([j for i in self.location for j in i])))# 记录item
-        # self.first_support = self.support[:] # 求取confidence
 
         self.pre_support = [] # 保存前一个support,location,num
         self.pre_location = []
@@ -63,10 +61,6 @@ class Apriori(object):
     def select(self, c):
         "返回位置"
         stack = []
-        # if self.pre_location:
-        #     pre = self.pre_location
-        # else:
-        #     pre = self.location
         for i in self.location:
             for j in self.num:
                 if j in i:
@@ -141,20 +135,19 @@ class Apriori(object):
                 # print del_num
                 # print self.support[index_location]
                 # print del_support
-                # if not del_num[0]:
-                #     print 'min_support error'
-                #     break
                 for index,i in enumerate(del_num): # 计算每个关联规则支持度和自信度
                     index_support = 0
                     if len(self.support) != 1:
                         index_support = index
-                    support =  float(self.support[index_location])/10 # 支持度
+                    support =  float(self.support[index_location])/self.line_num * 100 # 支持度
                     s = [j for index_item,j in enumerate(self.item_name) if index_item in i]
                     if del_support[index]:
-                        print ','.join(s) , '->>' , self.item_name[each_location[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , float(self.support[index_location])/del_support[index]
+                        confidence = float(self.support[index_location])/del_support[index] * 100
+                        if confidence > self.min_confidence:
+                            print ','.join(s) , '->>' , self.item_name[each_location[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , str(confidence) + '%'
 
 def main():
-    c = Apriori('basket.txt', 11, 3, 13)
+    c = Apriori('basket.txt', 14, 3, 13)
     d = Apriori('simple.txt', 50, 2, 6)
 
 if __name__ == '__main__':
