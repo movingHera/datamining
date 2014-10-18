@@ -3,30 +3,36 @@
 #---------------------------------------------------------------------------
 class Apriori(object):
 
-    def __init__(self, filename):
-        self.min_support = 10
+    def __init__(self, filename, min_support, item_start, item_end):
+        self.filename = filename
+        self.min_support = min_support # 最小支持度
         self.min_confidence = 20
-        self.item_num = 11 # 项目数
+        # self.item_num = item_num # 项目数
+        self.line_num = 0 # item的行数
+        self.item_start = item_start #  取哪行的item
+        self.item_end = item_end
 
-        self.location = [[i] for i in range(self.item_num)]
+        self.location = [[i] for i in range(self.item_end - self.item_start + 1)]
         self.support = self.sut(self.location)
         self.num = list(sorted(set([j for i in self.location for j in i])))# 记录item
-        self.first_support = self.support[:] # 求取confidence
+        # self.first_support = self.support[:] # 求取confidence
 
         self.pre_support = [] # 保存前一个support,location,num
         self.pre_location = []
         self.pre_num = []
 
         self.item_name = [] # 项目名
-        self.find_item_name(filename)
+        self.find_item_name()
+        self.loop()
+        self.confidence_sup()
 
     def deal_line(self, line):
         "提取出需要的项"
-        return [i.strip() for i in line.split(' ') if i][2:]
+        return [i.strip() for i in line.split(' ') if i][self.item_start - 1:self.item_end]
 
-    def find_item_name(self, filename):
+    def find_item_name(self):
         "根据第一行抽取item_name"
-        with open(filename, 'r') as F:
+        with open(self.filename, 'r') as F:
             for index,line in enumerate(F.readlines()):
                 if index == 0:
                     self.item_name = self.deal_line(line)
@@ -37,7 +43,7 @@ class Apriori(object):
         输入[[1,2,3],[2,3,4],[1,3,5]...]
         输出每个位置集的support [123,435,234...]
         """
-        with open('basket.txt', 'r') as F:
+        with open(self.filename, 'r') as F:
             support = [0] * len(location)
             for index,line in enumerate(F.readlines()):
                 if index == 0: continue
@@ -51,6 +57,7 @@ class Apriori(object):
                             break
                     if not flag:
                         support[index_num] += 1
+            self.line_num = index # 一共多少行,出去第一行的item_name
         return support
 
     def select(self, c):
@@ -77,7 +84,7 @@ class Apriori(object):
         "清除不满足条件的候选集"
         # 小于最小支持度的剔除
         for index,i in enumerate(support):
-            if i < 1000 * self.min_support / 100:
+            if i < self.line_num * self.min_support / 100:
                 support[index] = 0
         # apriori第二条规则,剔除
         for index,j in enumerate(location):
@@ -131,9 +138,9 @@ class Apriori(object):
                 del_num = [each_location[:index] + each_location[index+1:] for index in range(len(each_location))] # 生成上一级频繁项级
                 del_num = [i for i in del_num if i in self.pre_location] # 删除不存在上一级频繁项级子集
                 del_support = [self.pre_support[self.pre_location.index(i)] for i in del_num if i in self.pre_location] # 从上一级支持度查找
-                print del_num
-                print self.support[index_location]
-                print del_support
+                # print del_num
+                # print self.support[index_location]
+                # print del_support
                 # if not del_num[0]:
                 #     print 'min_support error'
                 #     break
@@ -147,9 +154,8 @@ class Apriori(object):
                         print ','.join(s) , '->>' , self.item_name[each_location[index]] , ' min_support: ' , str(support) + '%' , ' min_confidence:' , float(self.support[index_location])/del_support[index]
 
 def main():
-    c = Apriori('basket.txt')
-    c.loop()
-    c.confidence_sup()
+    c = Apriori('basket.txt', 11, 3, 13)
+    d = Apriori('simple.txt', 50, 2, 6)
 
 if __name__ == '__main__':
     main()
